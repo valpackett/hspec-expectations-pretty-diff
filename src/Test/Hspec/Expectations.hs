@@ -4,8 +4,11 @@ module Test.Hspec.Expectations (
 
 -- * Setting expectations
   Expectation
+, Location
 , expectationFailure
+, expectationFailureLoc
 , shouldBe
+, shouldBeLoc
 , shouldSatisfy
 , shouldReturn
 
@@ -39,12 +42,24 @@ import           Prelude
 import           Test.HUnit (Assertion, (@?=), assertBool, assertFailure)
 import           Control.Exception
 import           Data.Typeable
+import           Data.List
 
 type Expectation = Assertion
+type Location = String
 
 -- | This is just an alias for HUnit's `assertFailure`.
 expectationFailure :: String -> Expectation
 expectationFailure = assertFailure
+
+{-# REWRITE_WITH_LOCATION expectationFailure expectationFailureLoc #-}
+expectationFailureLoc :: Location -> String -> Expectation
+expectationFailureLoc loc msg = assertFailure (stripColumn loc ++ "\n" ++ indent msg)
+  where
+    stripColumn :: String -> String
+    stripColumn = init . reverse . snd . break (== ':') . reverse
+
+    indent :: String -> String
+    indent = intercalate "\n" . map ("  " ++) . lines
 
 infix 1 `shouldBe`, `shouldSatisfy`, `shouldReturn`, `shouldThrow`
 
@@ -53,6 +68,13 @@ infix 1 `shouldBe`, `shouldSatisfy`, `shouldReturn`, `shouldThrow`
 -- to @expected@ (this is just an alias for `@?=`).
 shouldBe :: (Show a, Eq a) => a -> a -> Expectation
 actual `shouldBe` expected = actual @?= expected
+
+shouldBeLoc :: (Show a, Eq a) => Location -> a -> a -> Expectation
+shouldBeLoc loc actual expected
+  | actual == expected = return ()
+  | otherwise = expectationFailureLoc loc ("expected: " ++ show expected ++ "\n but got: " ++ show actual)
+
+{-# REWRITE_WITH_LOCATION shouldBe shouldBeLoc #-}
 
 -- |
 -- @v \`shouldSatisfy\` p@ sets the expectation that @p v@ is @True@.
