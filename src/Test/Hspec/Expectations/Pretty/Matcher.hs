@@ -1,4 +1,4 @@
-module Test.Hspec.Expectations.Matcher (matchList) where
+module Test.Hspec.Expectations.Pretty.Matcher (matchList) where
 
 import           Prelude hiding (showList)
 import           Data.List

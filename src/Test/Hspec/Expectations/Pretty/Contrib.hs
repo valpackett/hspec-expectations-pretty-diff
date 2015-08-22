@@ -2,7 +2,7 @@
 -- |
 -- Experimental combinators, that may become part of the main distribution, if
 -- they turn out to be useful for a wider audience.
-module Test.Hspec.Expectations.Contrib (
+module Test.Hspec.Expectations.Pretty.Contrib (
 -- * Predicates
 -- | (useful in combination with `shouldSatisfy`)
   isLeft

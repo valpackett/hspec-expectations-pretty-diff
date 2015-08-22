@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE StandaloneDeriving #-}
-module Test.Hspec.ExpectationsSpec (spec) where
+module Test.Hspec.Expectations.PrettySpec (spec) where
 
 import           Control.Exception
 import           Test.HUnit.Lang
@@ -9,7 +9,7 @@ import           Test.Hspec (Spec, describe, it)
 import           Data.Aeson
 import           Data.Text (pack)
 
-import           Test.Hspec.Expectations
+import           Test.Hspec.Expectations.Pretty
 
 deriving instance Eq HUnitFailure
 

@@ -1,8 +1,8 @@
-module Test.Hspec.Expectations.MatcherSpec (main, spec) where
+module Test.Hspec.Expectations.Pretty.MatcherSpec (main, spec) where
 
 import           Test.Hspec
 
-import           Test.Hspec.Expectations.Matcher
+import           Test.Hspec.Expectations.Pretty.Matcher
 
 main :: IO ()
 main = hspec spec

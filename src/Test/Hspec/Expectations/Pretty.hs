@@ -6,7 +6,7 @@
 #endif
 -- |
 -- Introductory documentation: <https://github.com/sol/hspec-expectations#readme>
-module Test.Hspec.Expectations (
+module Test.Hspec.Expectations.Pretty (
 
 -- * Setting expectations
   Expectation
@@ -72,7 +72,7 @@ import           System.Console.ANSI
 
 import           Control.Monad (unless)
 
-import           Test.Hspec.Expectations.Matcher
+import           Test.Hspec.Expectations.Pretty.Matcher
 
 #ifdef HAS_SOURCE_LOCATIONS
 
