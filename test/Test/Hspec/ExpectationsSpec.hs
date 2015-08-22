@@ -1,8 +1,6 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
-#if MIN_VERSION_base(4,8,1)
-#define HAS_SOURCE_LOCATIONS
-{-# LANGUAGE ImplicitParams #-}
-#endif
+{-# LANGUAGE StandaloneDeriving #-}
 module Test.Hspec.ExpectationsSpec (spec) where
 
 import           Control.Exception
@@ -11,25 +9,10 @@ import           Test.Hspec (Spec, describe, it)
 
 import           Test.Hspec.Expectations
 
-#ifdef HAS_SOURCE_LOCATIONS
+deriving instance Eq HUnitFailure
 
-import           GHC.SrcLoc
-import           GHC.Stack
-
-expectationFailed :: (?loc :: CallStack) => String -> HUnitFailure -> Bool
-expectationFailed msg (HUnitFailure l m) = m == msg && (setColumn <$> l) == location
-  where
-    location :: Maybe Location
-    location = case reverse (getCallStack ?loc) of
-      (_, loc) : _ -> Just $ Location (srcLocFile loc) (srcLocStartLine loc) 0
-      _ -> Nothing
-
-    setColumn :: Location -> Location
-    setColumn loc_ = loc_{locationColumn = 0}
-#else
 expectationFailed :: String -> HUnitFailure -> Bool
-expectationFailed msg e = e == HUnitFailure Nothing msg
-#endif
+expectationFailed msg e = e == HUnitFailure msg
 
 spec :: Spec
 spec = do

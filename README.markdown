@@ -1,3 +1,7 @@
+# hspec-expectations-pretty-diff
+
+A fork of hspec-expectations (WIP)
+
 # Catchy combinators for HUnit
 
 (inspired by [ScalaTest's ShouldMatchers](http://www.scalatest.org/))
