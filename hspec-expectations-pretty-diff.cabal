@@ -24,9 +24,12 @@ library
   build-depends:
       base == 4.*
     , HUnit
-    , groom
+    , text
+    , hindent
+    , haskell-src-exts
     , hscolour
     , Diff
+    , ansi-terminal
   exposed-modules:
       Test.Hspec.Expectations
       Test.Hspec.Expectations.Contrib
@@ -39,7 +42,7 @@ test-suite tests
     , hspec-expectations-pretty-diff
     , HUnit
     , aeson
-    , vector
+    , text
     , hspec
   default-language: Haskell2010
   ghc-options: -threaded -Wall

@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 #if MIN_VERSION_base(4,8,1)
 #define HAS_SOURCE_LOCATIONS
 {-# LANGUAGE ImplicitParams #-}
@@ -49,10 +50,25 @@ module Test.Hspec.Expectations (
 , errorCall
 ) where
 
+import           Prelude hiding (exp)
 import qualified Test.HUnit
 import           Control.Exception
 import           Data.Typeable
 import           Data.List
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TLB
+import           Data.Algorithm.Diff (getDiff, Diff(..))
+
+import           Language.Haskell.HsColour hiding (layout)
+import           Language.Haskell.HsColour.Colourise (defaultColourPrefs)
+import           Language.Haskell.HsColour.ANSI (TerminalType(..))
+import           Language.Haskell.Exts.Annotated.Syntax
+import           HIndent
+import           HIndent.Pretty
+import           HIndent.Types
+import qualified HIndent.Styles.ChrisDone as S
+import           System.Console.ANSI
 
 import           Control.Monad (unless)
 
@@ -81,11 +97,51 @@ expectTrue msg b = unless b (expectationFailure msg)
 infix 1 `shouldBe`, `shouldSatisfy`, `shouldStartWith`, `shouldEndWith`, `shouldContain`, `shouldMatchList`, `shouldReturn`, `shouldThrow`
 infix 1 `shouldNotBe`, `shouldNotSatisfy`, `shouldNotContain`, `shouldNotReturn`
 
+hspecStyle :: Style
+hspecStyle =
+  Style { styleName = T.empty
+        , styleAuthor = T.empty
+        , styleDescription = T.empty
+        , styleInitialState = S.State
+        , styleExtenders = [ Extender exp, Extender S.fieldupdate, Extender S.rhs ]
+        , styleDefConfig = defaultConfig { configMaxColumns = 80, configIndentSpaces = 2 }
+        , styleCommentPreprocessor = return }
+  where exp :: Exp NodeInfo -> Printer t ()
+        exp (List _ es) = brackets' $ prefixedLined ", " $ map pretty es
+        exp (Tuple _ boxed exps) =
+          depend (write (case boxed of
+                          Unboxed -> "(# "
+                          Boxed -> "( "))
+                 (do prefixedLined ", " (map pretty exps)
+                     write (case boxed of
+                             Unboxed -> " #)"
+                             Boxed -> " )"))
+        exp e = S.exp e
+        brackets' p =
+          depend (write "[ ")
+                 (do v <- p
+                     write " ]"
+                     return v)
+
+prettyColor :: Show a => a -> String
+prettyColor = hscolour' . hindent' . show
+  where hscolour' = hscolour (TTYg Ansi16Colour) defaultColourPrefs False False "" False
+        hindent' x = case reformat hspecStyle Nothing $ TL.pack x of
+                       Right b -> TL.unpack $ TLB.toLazyText b
+                       Left _ -> x
+
+diffColor :: String -> String -> String
+diffColor x y = unlines $ map addSign $ getDiff (lines x) (lines y)
+  where addSign (Both _ s) = "   " ++ s
+        addSign (First  s) = color Red "---" ++ s
+        addSign (Second s) = color Green "+++" ++ s
+        color c s = setSGRCode [SetColor Foreground Dull c] ++ s ++ setSGRCode [Reset]
+
 -- |
 -- @actual \`shouldBe\` expected@ sets the expectation that @actual@ is equal
 -- to @expected@.
 with_loc(shouldBe, (Show a, Eq a) => a -> a -> Expectation)
-actual `shouldBe` expected = expectTrue ("expected: " ++ show expected ++ "\n but got: " ++ show actual) (actual == expected)
+actual `shouldBe` expected = expectTrue (diffColor (prettyColor expected) (prettyColor actual)) (actual == expected)
 
 -- |
 -- @v \`shouldSatisfy\` p@ sets the expectation that @p v@ is @True@.

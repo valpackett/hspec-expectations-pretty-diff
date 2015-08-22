@@ -6,6 +6,8 @@ module Test.Hspec.ExpectationsSpec (spec) where
 import           Control.Exception
 import           Test.HUnit.Lang
 import           Test.Hspec (Spec, describe, it)
+import           Data.Aeson
+import           Data.Text (pack)
 
 import           Test.Hspec.Expectations
 
@@ -14,6 +16,9 @@ deriving instance Eq HUnitFailure
 expectationFailed :: String -> HUnitFailure -> Bool
 expectationFailed msg e = e == HUnitFailure msg
 
+data TestStructure = TestStructure { name :: String, number :: Int, children :: [TestStructure] }
+  deriving (Show, Eq)
+
 spec :: Spec
 spec = do
   describe "shouldBe" $ do
@@ -21,7 +26,9 @@ spec = do
       "foo" `shouldBe` "foo"
 
     it "fails if arguments are not equal" $ do
-      ("foo" `shouldBe` "bar") `shouldThrow` expectationFailed "expected: \"bar\"\n but got: \"foo\""
+      ("foo" `shouldBe` "bar") `shouldThrow` expectationFailed "\ESC[31m---\ESC[0m\ESC[35m\"bar\"\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[35m\"foo\"\ESC[0m\n"
+      ([ TestStructure "outer" 123 [ TestStructure "inner" 456 [] ] ] `shouldBe` [ TestStructure "outer" 123 [ TestStructure "inner" 457 [] ] ]) `shouldThrow` expectationFailed "   \ESC[31m[\ESC[0m\ESC[0m \ESC[0m\ESC[0mTestStructure\ESC[0m\ESC[0m \ESC[0m\ESC[36m{\ESC[0m\ESC[0mname\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"outer\"\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m                \ESC[0m\ESC[36m,\ESC[0m\ESC[0mnumber\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[35m123\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m                \ESC[0m\ESC[36m,\ESC[0m\ESC[0mchildren\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m                   \ESC[0m\ESC[31m[\ESC[0m\ESC[0m \ESC[0m\ESC[0mTestStructure\ESC[0m\ESC[0m \ESC[0m\ESC[36m{\ESC[0m\ESC[0mname\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"inner\"\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m                                   \ESC[0m\ESC[36m,\ESC[0m\ESC[0mnumber\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[35m457\ESC[0m\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[0m\ESC[0m                                   \ESC[0m\ESC[36m,\ESC[0m\ESC[0mnumber\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[35m456\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m                                   \ESC[0m\ESC[36m,\ESC[0m\ESC[0mchildren\ESC[0m\ESC[0m \ESC[0m\ESC[31m=\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m  \ESC[0m\ESC[31m]\ESC[0m\ESC[36m}\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\ESC[36m}\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\n"
+      (object [ pack "foo" .= object [ pack "bar" .= Number 123 ] ] `shouldBe` object [ pack "foo" .= object [ pack "bar" .= Number 234, pack "quux" .= Number 567 ] ]) `shouldThrow` expectationFailed "   \ESC[0mObject\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0mfromList\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"foo\"\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m                   \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[0mObject\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0mfromList\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"quux\"\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m                                        \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m567.0\ESC[0m\ESC[0m \ESC[0m\ESC[36m)\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m                                      \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"bar\"\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m                                        \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m234.0\ESC[0m\ESC[0m \ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[0m\ESC[0m                   \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[0mObject\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0mfromList\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"bar\"\ESC[0m\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[0m\ESC[0m                                        \ESC[0m\ESC[36m,\ESC[0m\ESC[0m \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m123.0\ESC[0m\ESC[0m \ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[36m)\ESC[0m\ESC[0m \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\n"
 
   describe "shouldSatisfy" $ do
     it "succeeds if value satisfies predicate" $ do
@@ -35,7 +42,7 @@ spec = do
       return "foo" `shouldReturn` "foo"
 
     it "fails if arguments do not represent equal values" $ do
-      (return "foo" `shouldReturn` "bar") `shouldThrow` expectationFailed "expected: \"bar\"\n but got: \"foo\""
+      (return "foo" `shouldReturn` "bar") `shouldThrow` expectationFailed "\ESC[31m---\ESC[0m\ESC[35m\"bar\"\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[35m\"foo\"\ESC[0m\n"
 
   describe "shouldStartWith" $ do
     it "succeeds if second is prefix of first" $ do
