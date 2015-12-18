@@ -1,6 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE StandaloneDeriving #-}
 module Test.Hspec.Expectations.PrettySpec (spec) where
 
 import           Control.Exception
@@ -11,10 +10,8 @@ import           Data.Text (pack)
 
 import           Test.Hspec.Expectations.Pretty
 
-deriving instance Eq HUnitFailure
-
 expectationFailed :: String -> HUnitFailure -> Bool
-expectationFailed msg e = e == HUnitFailure msg
+expectationFailed msg (HUnitFailure _ msg') = msg == msg'
 
 data TestStructure = TestStructure { name :: String, number :: Int, children :: [TestStructure] }
   deriving (Show, Eq)
