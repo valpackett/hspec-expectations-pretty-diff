@@ -25,8 +25,7 @@ library
       base == 4.*
     , HUnit
     , text
-    , hindent
-    , haskell-src-exts
+    , nicify-lib
     , hscolour
     , Diff
     , ansi-terminal

@@ -2,7 +2,7 @@
 
 A fork of hspec-expectations where:
 
-- `shouldBe` shows a diff, colored with [hscolour](https://hackage.haskell.org/package/hscolour) and pretty-printed with [hindent](https://github.com/chrisdone/hindent). That works for all types that have `Show` instances that produce valid Haskell code. Which is most instances really. Definitely the derived ones.
+- `shouldBe` shows a diff, colored with [hscolour](https://hackage.haskell.org/package/hscolour) and pretty-printed with [nicify](https://github.com/scravy/nicify-lib). That works for all types that have `Show` instances that produce valid Haskell code. Which is most instances really. Definitely the derived ones.
 
 ![Screenshot](http://i.imgur.com/32t1exX.png)
 
