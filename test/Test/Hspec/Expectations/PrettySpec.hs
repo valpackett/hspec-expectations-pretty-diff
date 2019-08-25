@@ -6,12 +6,19 @@ import           Control.Exception
 import           Test.HUnit.Lang
 import           Test.Hspec (Spec, describe, it)
 import           Data.Aeson
+import           Data.List (isPrefixOf)
 import           Data.Text (pack)
+import           GHC.Stack (srcLocModule)
 
 import           Test.Hspec.Expectations.Pretty
 
 expectationFailed :: String -> HUnitFailure -> Bool
-expectationFailed msg (HUnitFailure _ msg') = msg == msg'
+expectationFailed msg (HUnitFailure _ failureReason) =
+  msg == formatFailureReason failureReason
+
+expectationFailedPrefix :: String -> HUnitFailure -> Bool
+expectationFailedPrefix msg (HUnitFailure _ failureReason) =
+  msg `isPrefixOf` formatFailureReason failureReason
 
 data TestStructure = TestStructure String Int [TestStructure]
   deriving (Show, Eq)
@@ -26,6 +33,10 @@ spec = do
       ("foo" `shouldBe` "bar") `shouldThrow` expectationFailed "\ESC[31m---\ESC[0m\ESC[35m\"bar\"\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[35m\"foo\"\ESC[0m\n"
       ([ TestStructure "outer" 123 [ TestStructure "inner" 456 [] ] ] `shouldBe` [ TestStructure "outer" 123 [ TestStructure "inner" 457 [] ] ]) `shouldThrow` expectationFailed "   \ESC[31m[\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m    \ESC[0m\ESC[0mTestStructure\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"outer\"\ESC[0m\ESC[0m \ESC[0m\ESC[35m123\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[0mTestStructure\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"inner\"\ESC[0m\ESC[0m \ESC[0m\ESC[35m457\ESC[0m\ESC[0m \ESC[0m\ESC[0m[]\ESC[0m\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[0mTestStructure\ESC[0m\ESC[0m \ESC[0m\ESC[35m\"inner\"\ESC[0m\ESC[0m \ESC[0m\ESC[35m456\ESC[0m\ESC[0m \ESC[0m\ESC[0m[]\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m    \ESC[0m\ESC[31m]\ESC[0m\ESC[0m\n   \ESC[0m\ESC[31m]\ESC[0m\n"
       (object [ pack "foo" .= object [ pack "bar" .= Number 123 ] ] `shouldBe` object [ pack "foo" .= object [ pack "bar" .= Number 234, pack "quux" .= Number 567 ] ]) `shouldThrow` expectationFailed "   \ESC[0mObject\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0mfromList\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m    \ESC[0m\ESC[36m(\ESC[0m\ESC[35m\"foo\"\ESC[0m\ESC[36m,\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m    \ESC[0m\ESC[0mObject\ESC[0m\ESC[0m \ESC[0m\ESC[36m(\ESC[0m\ESC[0mfromList\ESC[0m\ESC[0m \ESC[0m\ESC[31m[\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[36m(\ESC[0m\ESC[35m\"quux\"\ESC[0m\ESC[36m,\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m567.0\ESC[0m\ESC[36m)\ESC[0m\ESC[36m,\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m        \ESC[0m\ESC[36m(\ESC[0m\ESC[35m\"bar\"\ESC[0m\ESC[36m,\ESC[0m\ESC[0m\n\ESC[31m---\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m234.0\ESC[0m\ESC[36m)\ESC[0m\ESC[0m\n\ESC[32m+++\ESC[0m\ESC[0m\ESC[0m        \ESC[0m\ESC[0mNumber\ESC[0m\ESC[0m \ESC[0m\ESC[35m123.0\ESC[0m\ESC[36m)\ESC[0m\ESC[0m\n   \ESC[0m\ESC[0m    \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\ESC[36m)\ESC[0m\ESC[0m\n   \ESC[0m\ESC[31m]\ESC[0m\ESC[36m)\ESC[0m\n"
+
+    it "includes the test location in the call stack when it fails" $
+      ("foo" `shouldBe` "bar") `shouldThrow` \(HUnitFailure srcLocMaybe _) ->
+        fmap srcLocModule srcLocMaybe == Just "Test.Hspec.Expectations.PrettySpec"
 
   describe "shouldSatisfy" $ do
     it "succeeds if value satisfies predicate" $ do
@@ -113,4 +124,4 @@ spec = do
       (return () `shouldThrow` anyErrorCall) `shouldThrow` expectationFailed "did not get expected exception: ErrorCall"
 
     it "fails, if a required specific exception is not thrown" $ do
-      (error "foo" `shouldThrow` errorCall "foobar") `shouldThrow` expectationFailed "predicate failed on expected exception: ErrorCall (foo)"
+      (error "foo" `shouldThrow` errorCall "foobar") `shouldThrow` expectationFailedPrefix "predicate failed on expected exception: ErrorCall (foo"

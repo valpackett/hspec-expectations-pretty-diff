@@ -68,7 +68,13 @@ import           Control.Monad (unless)
 
 import           Test.Hspec.Expectations.Pretty.Matcher
 
-#ifdef HAS_SOURCE_LOCATIONS
+#if defined(HAS_SOURCE_LOCATIONS) && MIN_VERSION_HUnit(1,4,0)
+
+import           GHC.Stack
+
+#define with_loc(NAME, TYPE) NAME :: (?callStack :: CallStack) => TYPE
+
+#elif defined(HAS_SOURCE_LOCATIONS)
 
 import           GHC.Stack
 
