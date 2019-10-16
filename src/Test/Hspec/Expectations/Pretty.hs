@@ -56,7 +56,11 @@ import qualified Test.HUnit
 import           Control.Exception
 import           Data.Typeable
 import           Data.List
+#if MIN_VERSION_Diff(0,4,0)
 import           Data.Algorithm.Diff (getDiff, PolyDiff(First, Second, Both))
+#else
+import           Data.Algorithm.Diff (getDiff, Diff(First, Second, Both))
+#endif
 
 import           Language.Haskell.HsColour hiding (layout)
 import           Language.Haskell.HsColour.Colourise (defaultColourPrefs)
