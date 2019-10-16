@@ -1,6 +1,6 @@
 flags: {}
 packages:
   - '.'
-resolver: lts-14.2
+resolver: lts-14.9
 extra-deps:
-  - nicify-lib-1.0.1
+  - Diff-0.4.0
