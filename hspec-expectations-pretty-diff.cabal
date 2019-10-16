@@ -1,5 +1,5 @@
 name:             hspec-expectations-pretty-diff
-version:          0.7.2.4
+version:          0.7.2.5
 synopsis:         Catchy combinators for HUnit
 description:      Catchy combinators for HUnit: <https://github.com/myfreeweb/hspec-expectations-pretty-diff#readme>
 bug-reports:      https://github.com/myfreeweb/hspec-expectations-pretty-diff/issues
