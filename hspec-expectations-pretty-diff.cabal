@@ -29,6 +29,7 @@ library
     , hscolour
     , Diff
     , ansi-terminal
+    , unicode-show
   exposed-modules:
       Test.Hspec.Expectations.Pretty
       Test.Hspec.Expectations.Pretty.Contrib

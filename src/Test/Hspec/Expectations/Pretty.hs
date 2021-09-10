@@ -56,6 +56,7 @@ import qualified Test.HUnit
 import           Control.Exception
 import           Data.Typeable
 import           Data.List
+import           Text.Show.Unicode (ushow)
 #if MIN_VERSION_Diff(0,4,0)
 import           Data.Algorithm.Diff (getDiff, PolyDiff(First, Second, Both))
 #else
@@ -102,7 +103,7 @@ infix 1 `shouldBe`, `shouldSatisfy`, `shouldStartWith`, `shouldEndWith`, `should
 infix 1 `shouldNotBe`, `shouldNotSatisfy`, `shouldNotContain`, `shouldNotReturn`
 
 prettyColor :: Show a => a -> String
-prettyColor = hscolour' . nicify . show
+prettyColor = hscolour' . nicify . ushow
   where hscolour' = hscolour (TTYg Ansi16Colour) defaultColourPrefs False False "" False
 
 diffColor :: String -> String -> String
@@ -121,12 +122,12 @@ actual `shouldBe` expected = expectTrue (diffColor (prettyColor expected) (prett
 -- |
 -- @v \`shouldSatisfy\` p@ sets the expectation that @p v@ is @True@.
 with_loc(shouldSatisfy, (Show a) => a -> (a -> Bool) -> Expectation)
-v `shouldSatisfy` p = expectTrue ("predicate failed on: " ++ show v) (p v)
+v `shouldSatisfy` p = expectTrue ("predicate failed on: " ++ ushow v) (p v)
 
 with_loc(compareWith, (Show a, Eq a) => (a -> a -> Bool) -> String -> a -> a -> Expectation)
 compareWith comparator errorDesc result expected = expectTrue errorMsg (comparator expected result)
   where
-    errorMsg = show result ++ " " ++ errorDesc ++ " " ++ show expected
+    errorMsg = ushow result ++ " " ++ errorDesc ++ " " ++ ushow expected
 
 -- |
 -- @list \`shouldStartWith\` prefix@ sets the expectation that @list@ starts with @prefix@,
@@ -160,12 +161,12 @@ action `shouldReturn` expected = action >>= (`shouldBe` expected)
 -- @actual \`shouldNotBe\` notExpected@ sets the expectation that @actual@ is not
 -- equal to @notExpected@
 with_loc(shouldNotBe, (Show a, Eq a) => a -> a -> Expectation)
-actual `shouldNotBe` notExpected = expectTrue ("not expected: " ++ show actual) (actual /= notExpected)
+actual `shouldNotBe` notExpected = expectTrue ("not expected: " ++ ushow actual) (actual /= notExpected)
 
 -- |
 -- @v \`shouldNotSatisfy\` p@ sets the expectation that @p v@ is @False@.
 with_loc(shouldNotSatisfy, (Show a) => a -> (a -> Bool) -> Expectation)
-v `shouldNotSatisfy` p = expectTrue ("predicate succeded on: " ++ show v) ((not . p) v)
+v `shouldNotSatisfy` p = expectTrue ("predicate succeded on: " ++ ushow v) ((not . p) v)
 
 -- |
 -- @list \`shouldNotContain\` sublist@ sets the expectation that @sublist@ is not
@@ -173,7 +174,7 @@ v `shouldNotSatisfy` p = expectTrue ("predicate succeded on: " ++ show v) ((not 
 with_loc(shouldNotContain, (Show a, Eq a) => [a] -> [a] -> Expectation)
 list `shouldNotContain` sublist = expectTrue errorMsg ((not . isInfixOf sublist) list)
   where
-    errorMsg = show list ++ " does contain " ++ show sublist
+    errorMsg = ushow list ++ " does contain " ++ ushow sublist
 
 -- |
 -- @action \`shouldNotReturn\` notExpected@ sets the expectation that @action@
@@ -199,10 +200,10 @@ action `shouldThrow` p = do
         "did not get expected exception: " ++ exceptionType
     Left e ->
       (`expectTrue` p e) $
-        "predicate failed on expected exception: " ++ exceptionType ++ " (" ++ show e ++ ")"
+        "predicate failed on expected exception: " ++ exceptionType ++ " (" ++ ushow e ++ ")"
   where
     -- a string repsentation of the expected exception's type
-    exceptionType = (show . typeOf . instanceOf) p
+    exceptionType = (ushow . typeOf . instanceOf) p
       where
         instanceOf :: Selector a -> a
         instanceOf _ = error "Test.Hspec.Expectations.shouldThrow: broken Typeable instance"
